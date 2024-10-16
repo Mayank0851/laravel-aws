@@ -3,7 +3,7 @@ name: Laravel CI/CD
 on:
   push:
     branches:
-      - main  # Trigger on push to the 'main' branch
+      - main
 
 jobs:
   deploy:
@@ -45,20 +45,12 @@ jobs:
         run: |
           # Start the SSH agent
           eval "$(ssh-agent -s)"
+          # Add the key directly without creating a file
+          ssh-add <(echo "$SSH_PRIVATE_KEY")
           
-          # Create a temporary file for the SSH key
-          echo "$SSH_PRIVATE_KEY" > temp_key.pem
-          chmod 600 temp_key.pem
-          
-          # Add the key to the agent
-          ssh-add temp_key.pem
-          
-          # Disable strict host key checking and sync files to EC2 using rsync
+          # Sync files to EC2 using rsync
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ $USER@$HOST:/var/www/laravel
-          
-          # Clean up the SSH key file
-          rm temp_key.pem
-      
+
       # Step 7: SSH into the server and run post-deployment commands
       - name: Run post-deployment commands
         run: |
