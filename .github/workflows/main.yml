@@ -36,7 +36,7 @@ jobs:
       - name: Build assets
         run: npm run build
 
-          # Step 6: Sync files to AWS EC2
+      # Step 6: Sync files to AWS EC2
       - name: Deploy to EC2
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -50,10 +50,14 @@ jobs:
           # Sync files to EC2 using rsync, disable strict host key checking
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ $USER@$HOST:/var/www/laravel
 
-     # Step 7: SSH into the server and run post-deployment commands
+      # Step 7: SSH into the server and run post-deployment commands
       - name: Run post-deployment commands
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
         run: |
-          ssh -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY $USER@$HOST << 'EOF'
             cd /var/www/laravel
             composer install --no-dev
             php artisan migrate --force
@@ -63,4 +67,6 @@ jobs:
             sudo systemctl restart nginx
           EOF
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}  # Pass the private key to SSH command
+          COMPOSER_PROCESS_TIMEOUT: 0
+          COMPOSER_NO_INTERACTION: 1
+          COMPOSER_NO_AUDIT: 1
