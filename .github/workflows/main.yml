@@ -19,6 +19,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.3
+          extensions: mbstring, xml, bcmath, zip  # Add any required PHP extensions
 
       # Step 3: Install dependencies using Composer
       - name: Install Composer dependencies
@@ -30,7 +31,8 @@ jobs:
         with:
           node-version: 18
 
-      - run: npm install
+      - name: Install Node.js packages
+        run: npm install
 
       # Step 5: Build assets using Vite
       - name: Build assets
@@ -52,12 +54,8 @@ jobs:
 
       # Step 7: SSH into the server and run post-deployment commands
       - name: Run post-deployment commands
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          HOST: ${{ secrets.EC2_HOST }}
-          USER: ${{ secrets.EC2_USER }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY $USER@$HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd /var/www/laravel
             composer install --no-dev
             php artisan migrate --force
