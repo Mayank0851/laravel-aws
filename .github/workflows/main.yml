@@ -36,7 +36,7 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      # Step 6: Sync files to AWS EC2
+          # Step 6: Sync files to AWS EC2
       - name: Deploy to EC2
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -45,10 +45,8 @@ jobs:
         run: |
           # Start the SSH agent
           eval "$(ssh-agent -s)"
-          
           # Add the SSH key to the agent without creating a file
           ssh-add <(echo "$SSH_PRIVATE_KEY")
-          
           # Sync files to EC2 using rsync, disable strict host key checking
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ $USER@$HOST:/var/www/laravel
 
