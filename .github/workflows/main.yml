@@ -49,7 +49,8 @@ jobs:
           ssh-add <(echo "$SSH_PRIVATE_KEY")
           
           # Sync files to EC2 using rsync
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ $USER@$HOST:/var/www/laravel
+             rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ $USER@$HOST:/var/www/laravel
+
 
       # Step 7: SSH into the server and run post-deployment commands
       - name: Run post-deployment commands
