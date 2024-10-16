@@ -75,6 +75,9 @@ jobs:
       - name: Run post-deployment commands
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}  # Set SSH key environment variable for usage
+          COMPOSER_PROCESS_TIMEOUT: 0
+          COMPOSER_NO_INTERACTION: 1
+          COMPOSER_NO_AUDIT: 1
         run: |
           # Start the SSH agent
           eval "$(ssh-agent -s)"
@@ -89,8 +92,4 @@ jobs:
             php artisan view:cache
             sudo systemctl restart nginx
           EOF
-          env:
-          COMPOSER_PROCESS_TIMEOUT: 0
-          COMPOSER_NO_INTERACTION: 1
-          COMPOSER_NO_AUDIT: 1
 
