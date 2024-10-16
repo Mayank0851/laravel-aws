@@ -1,3 +1,4 @@
+
 name: Laravel CI/CD
 
 on:
@@ -65,14 +66,21 @@ jobs:
           # Start the SSH agent
           eval "$(ssh-agent -s)"
           # Add the SSH key to the agent
-          echo "$SSH_PRIVATE_KEY" | ssh-add -
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
           # Sync files to EC2 using rsync, disable strict host key checking
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ $USER@$HOST:/var/www/laravel
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ "$USER@$HOST:/var/www/laravel"
 
       # Step 8: SSH into the server and run post-deployment commands
       - name: Run post-deployment commands
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}  # Set SSH key environment variable for usage
         run: |
-          ssh -v -o StrictHostKeyChecking=no -i "${{ secrets.EC2_SSH_KEY }}" "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+          # Start the SSH agent
+          eval "$(ssh-agent -s)"
+          # Add the SSH key to the agent
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+          # SSH into the server and run commands
+          ssh -v -o StrictHostKeyChecking=no "$USER@$HOST" << 'EOF'
             cd /var/www/laravel
             php artisan migrate --force
             php artisan config:cache
@@ -84,4 +92,3 @@ jobs:
           COMPOSER_PROCESS_TIMEOUT: 0
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
-
