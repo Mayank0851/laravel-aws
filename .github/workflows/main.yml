@@ -44,10 +44,10 @@ jobs:
             ${{ runner.os }}-npm-
 
       # Step 6: Set up Node.js
-      - name: Install Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: '18'  # Use quotes for consistency
 
       # Step 7: Install Node.js packages
       - name: Install Node.js packages
@@ -89,7 +89,7 @@ jobs:
             php artisan view:cache
             sudo systemctl restart nginx
           EOF
-        env:
+          env:
           COMPOSER_PROCESS_TIMEOUT: 0
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
