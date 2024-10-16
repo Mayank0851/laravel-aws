@@ -43,10 +43,11 @@ jobs:
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
         run: |
+          # Start the SSH agent
+          eval "$(ssh-agent -s)"
           # Add EC2 instance SSH key to SSH agent
           echo "$SSH_PRIVATE_KEY" | ssh-add -
-
-          # Deploy to your EC2 instance
+          # Deploy to your EC2 instance using rsync
           rsync -avz --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ $USER@$HOST:/var/www/laravel
 
       # Step 7: SSH into the server and run post-deployment commands
