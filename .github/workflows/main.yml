@@ -77,6 +77,7 @@ jobs:
           COMPOSER_NO_AUDIT: 1
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Start the SSH agent
           eval "$(ssh-agent -s)"
@@ -86,8 +87,8 @@ jobs:
           ssh -v -o StrictHostKeyChecking=no "$USER@$HOST" << 'EOF'
             cd /var/www/laravel
             
-            # Pull the latest changes from the repository
-            git pull origin main
+            # Pull the latest changes from the repository using the GITHUB_TOKEN
+            git pull https://${{ secrets.GIT_TOKEN }}@github.com/Mayank0851/laravel-aws.git
             
             # Run Laravel commands
             php artisan migrate --force
