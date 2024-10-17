@@ -47,7 +47,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Use quotes for consistency
+          node-version: '18'
 
       # Step 7: Install Node.js packages
       - name: Install Node.js packages
@@ -74,16 +74,14 @@ jobs:
       # Step 10: SSH into the server and run post-deployment commands
       - name: Run post-deployment commands
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}  # Set SSH key environment variable for usage
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           COMPOSER_PROCESS_TIMEOUT: 0
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
         run: |
           # Start the SSH agent
           eval "$(ssh-agent -s)"
-          # Add the SSH key to the agent
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-          # SSH into the server and run commands
           ssh -v -o StrictHostKeyChecking=no "$USER@$HOST" << 'EOF'
             cd /var/www/laravel
             php artisan migrate --force
@@ -92,4 +90,5 @@ jobs:
             php artisan view:cache
             sudo systemctl restart nginx
           EOF
+
 
