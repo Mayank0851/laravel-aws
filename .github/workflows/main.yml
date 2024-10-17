@@ -85,6 +85,11 @@ jobs:
           # SSH command
           ssh -v -o StrictHostKeyChecking=no "$USER@$HOST" << 'EOF'
             cd /var/www/laravel
+            
+            # Pull the latest changes from the repository
+            git pull origin main
+            
+            # Run Laravel commands
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
