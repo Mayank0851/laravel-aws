@@ -57,7 +57,18 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      # Step 9: Sync files to AWS EC2
+      # Step 9: Test SSH Connection to EC2
+      - name: Test SSH Connection to EC2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          eval "$(ssh-agent -s)"
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+          ssh -v -o StrictHostKeyChecking=no "$USER@$HOST" echo "Connection successful"
+
+      # Step 10: Sync files to AWS EC2
       - name: Deploy to EC2
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -69,9 +80,11 @@ jobs:
           # Add the SSH key to the agent
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
           # Sync files to EC2 using rsync, disable strict host key checking
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ "$USER@$HOST:/var/www/laravel"
+          echo "Syncing files to EC2..."
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ "$USER@$HOST:/var/www/laravel" || { echo 'rsync failed'; exit 1; }
+          echo "Files synced successfully."
 
-      # Step 10: SSH into the server and run post-deployment commands
+      # Step 11: SSH into the server and run post-deployment commands
       - name: Run post-deployment commands
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
