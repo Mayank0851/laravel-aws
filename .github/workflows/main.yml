@@ -68,33 +68,21 @@ jobs:
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
           ssh -v -o StrictHostKeyChecking=no "$USER@$HOST" echo "Connection successful"
 
-      # Step 10: Sync files to AWS EC2
-      - name: Deploy to EC2
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          HOST: ${{ secrets.EC2_HOST }}
-          USER: ${{ secrets.EC2_USER }}
-        run: |
-          # Start the SSH agent
-          eval "$(ssh-agent -s)"
-          # Add the SSH key to the agent
-          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-          # Sync files to EC2 using rsync, disable strict host key checking
-          echo "Syncing files to EC2..."
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude=".env" --exclude="node_modules" --exclude="vendor" ./ "$USER@$HOST:/var/www/laravel" || { echo 'rsync failed'; exit 1; }
-          echo "Files synced successfully."
-
-      # Step 11: SSH into the server and run post-deployment commands
+      # Step 10: SSH into the server and run post-deployment commands
       - name: Run post-deployment commands
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           COMPOSER_PROCESS_TIMEOUT: 0
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
         run: |
           # Start the SSH agent
           eval "$(ssh-agent -s)"
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+          
+          # SSH command
           ssh -v -o StrictHostKeyChecking=no "$USER@$HOST" << 'EOF'
             cd /var/www/laravel
             php artisan migrate --force
@@ -103,5 +91,3 @@ jobs:
             php artisan view:cache
             sudo systemctl restart nginx
           EOF
-
-
