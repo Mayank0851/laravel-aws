@@ -3,31 +3,50 @@ name: Deploy Laravel App
 on:
     push:
         branches:
-            - main # Adjust this if you're using a different branch for deployment
+            - main  # Adjust this if you're using a different branch for deployment
 
 jobs:
     deploy:
         runs-on: ubuntu-latest
 
         steps:
+            # Step 1: Checkout code
             - name: Checkout code
               uses: actions/checkout@v3
 
+            # Step 2: Set up SSH
             - name: Set up SSH
               uses: webfactory/ssh-agent@v0.7.0
               with:
                   ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+            # Step 3: Deploy to EC2
             - name: Deploy to EC2
               run: |
-                  ssh -o StrictHostKeyChecking=no ubuntu@13.202.92.159 << 'EOF'
-                    cd /var/www/laravel-app  # This is now the correct path
-                    git pull git@github.com:imYashGupta/Rentique.git  # Use SSH instead of HTTPS
-                    composer install --no-interaction --prefer-dist --optimize-autoloader  # Install/update PHP dependencies
+                  ssh -o StrictHostKeyChecking=no ubuntu@65.2.188.137 << 'EOF'
+                    set -e  # Exit immediately if a command exits with a non-zero status
+                    cd /var/www/laravel-app  # Navigate to your application directory
+                    
+                    # Pull the latest changes from the repository using SSH
+                    git pull git@github.com:imYashGupta/Rentique.git
+                    
+                    # Install/update PHP dependencies
+                    composer install --no-interaction --prefer-dist --optimize-autoloader
+                    
+                    # Install Node.js packages and build assets
                     npm install
                     npm run build
-                    php artisan migrate --force  # Apply database migrations
-                    php artisan optimize  # Optimize config
-                    sudo systemctl daemon-reload  # Reload systemd (to apply any changes to Nginx)
-                    sudo service nginx restart  # Restart Nginx to apply new changes
+                    
+                    # Apply database migrations
+                    php artisan migrate --force
+                    
+                    # Optimize application
+                    php artisan optimize
+                    
+                    # Reload systemd to apply any changes to Nginx
+                    sudo systemctl daemon-reload
+                    
+                    # Restart Nginx to apply new changes
+                    sudo service nginx restart
                   EOF
+
