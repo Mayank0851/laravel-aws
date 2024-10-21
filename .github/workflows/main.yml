@@ -63,9 +63,4 @@ jobs:
                     echo "Deployment complete!"
                   EOF
 
-            # Optional: Notify Deployment Status
-            - name: Notify Deployment Status
-              run: |
-                  echo "Deployment completed successfully!" | mail -s "Deployment Status" vishwakarmamayank451@gmail.com
-
-
+        
