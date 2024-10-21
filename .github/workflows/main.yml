@@ -20,33 +20,40 @@ jobs:
               with:
                   ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-            # Step 3: Deploy to EC2
+            # Step 3: Test SSH connection (Optional)
+            - name: Test SSH connection
+              run: |
+                  ssh -o StrictHostKeyChecking=no ubuntu@65.2.188.137 'echo "SSH connection successful"'
+
+            # Step 4: Deploy to EC2
             - name: Deploy to EC2
               run: |
                   ssh -o StrictHostKeyChecking=no ubuntu@65.2.188.137 << 'EOF'
                     set -e  # Exit immediately if a command exits with a non-zero status
-                    cd /var/www/laravel-app  # Navigate to your application directory
+                    echo "Navigating to application directory"
+                    cd /var/www/laravel-app
                     
-                    # Pull the latest changes from the repository using SSH
-                    git pull git@github.com:imYashGupta/Rentique.git
+                    echo "Pulling latest changes from your GitHub repository"
+                    git pull git@github.com:Mayank0851/laravel-aws.git
+                    echo "Git pull completed"
                     
-                    # Install/update PHP dependencies
+                    echo "Installing PHP dependencies"
                     composer install --no-interaction --prefer-dist --optimize-autoloader
                     
-                    # Install Node.js packages and build assets
+                    echo "Installing Node.js packages"
                     npm install
+                    echo "Building assets"
                     npm run build
                     
-                    # Apply database migrations
+                    echo "Running database migrations"
                     php artisan migrate --force
                     
-                    # Optimize application
+                    echo "Optimizing application"
                     php artisan optimize
                     
-                    # Reload systemd to apply any changes to Nginx
+                    echo "Reloading Nginx"
                     sudo systemctl daemon-reload
-                    
-                    # Restart Nginx to apply new changes
                     sudo service nginx restart
+                    echo "Deployment complete!"
                   EOF
 
