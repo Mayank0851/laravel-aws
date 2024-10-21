@@ -25,7 +25,13 @@ jobs:
               run: |
                   ssh -o StrictHostKeyChecking=no ubuntu@65.2.188.137 'echo "SSH connection successful"'
 
-            # Step 4: Deploy to EC2
+            # Step 4: Check known_hosts
+            - name: Check known_hosts
+              run: |
+                  echo "Contents of known_hosts:"
+                  cat ~/.ssh/known_hosts
+
+            # Step 5: Deploy to EC2
             - name: Deploy to EC2
               run: |
                   ssh -o StrictHostKeyChecking=no ubuntu@65.2.188.137 << 'EOF'
@@ -34,22 +40,22 @@ jobs:
                     cd /var/www/laravel-aws
                     
                     echo "Pulling latest changes from your GitHub repository"
-                    git pull git@github.com:Mayank0851/laravel-aws.git
+                    git pull git@github.com:Mayank0851/laravel-aws.git | tee git_pull.log
                     echo "Git pull completed"
                     
                     echo "Installing PHP dependencies"
-                    composer install --no-interaction --prefer-dist --optimize-autoloader
+                    composer install --no-interaction --prefer-dist --optimize-autoloader | tee composer_install.log
                     
                     echo "Installing Node.js packages"
-                    npm install
+                    npm install | tee npm_install.log
                     echo "Building assets"
-                    npm run build
+                    npm run build | tee npm_build.log
                     
                     echo "Running database migrations"
-                    php artisan migrate --force
+                    php artisan migrate --force | tee migrate.log
                     
                     echo "Optimizing application"
-                    php artisan optimize
+                    php artisan optimize | tee optimize.log
                     
                     echo "Reloading Nginx"
                     sudo systemctl daemon-reload
