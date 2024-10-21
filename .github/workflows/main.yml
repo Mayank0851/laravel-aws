@@ -31,7 +31,7 @@ jobs:
                   ssh -o StrictHostKeyChecking=no ubuntu@65.2.188.137 << 'EOF'
                     set -e  # Exit immediately if a command exits with a non-zero status
                     echo "Navigating to application directory"
-                    cd /var/www/laravel-app
+                    cd /var/www/laravel-aws
                     
                     echo "Pulling latest changes from your GitHub repository"
                     git pull git@github.com:Mayank0851/laravel-aws.git
@@ -60,6 +60,6 @@ jobs:
             # Optional: Notify Deployment Status
             - name: Notify Deployment Status
               run: |
-                  echo "Deployment completed successfully!" | mail -s "Deployment Status" youremail@example.com
+                  echo "Deployment completed successfully!" | mail -s "Deployment Status" vishwakarmamayank451@gmail.com
 
 
