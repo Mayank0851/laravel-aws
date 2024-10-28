@@ -23,7 +23,7 @@ jobs:
             # Step 3: Test SSH connection (Optional)
             - name: Test SSH connection
               run: |
-                  ssh -o StrictHostKeyChecking=no ubuntu@65.2.188.137 'echo "SSH connection successful"'
+                  ssh -o StrictHostKeyChecking=no ubuntu@3.111.198.113 'echo "SSH connection successful"'
 
             # Step 4: Check known_hosts
             - name: Check known_hosts
@@ -34,7 +34,7 @@ jobs:
             # Step 5: Deploy to EC2
             - name: Deploy to EC2
               run: |
-                  ssh -o StrictHostKeyChecking=no ubuntu@65.2.188.137 << 'EOF'
+                  ssh -o StrictHostKeyChecking=no ubuntu@3.111.198.113 << 'EOF'
                     set -e  # Exit immediately if a command exits with a non-zero status
                     echo "Navigating to application directory"
                     cd /var/www/laravel-aws
