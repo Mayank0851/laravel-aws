@@ -1,75 +1,78 @@
 name: Deploy Laravel App
 
 on:
-    push:
-        branches:
-            - main  
+  push:
+    branches:
+      - main  
 
 jobs:
-    deploy:
-        runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-        steps:
-            # Step 1: Checkout code
-            - name: Checkout code
-              uses: actions/checkout@v3
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-            # Step 2: Set up SSH
-            - name: Set up SSH
-              uses: webfactory/ssh-agent@v0.7.0
-              with:
-                  ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+      # Step 2: Set up SSH
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-            # Step 3: Test SSH connection (Optional)
-            - name: Test SSH connection
-              run: |
-                  ssh -o StrictHostKeyChecking=no ubuntu@3.111.198.113 'echo "SSH connection successful"'
+      # Step 3: Add EC2 IP to known_hosts
+      - name: Add EC2 IP to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 3.111.198.113 >> ~/.ssh/known_hosts
 
-            # Step 4: Check known_hosts
-            - name: Check known_hosts
-              run: |
-                  echo "Contents of known_hosts:"
-                  cat ~/.ssh/known_hosts
+      # Step 4: Test SSH connection
+      - name: Test SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@3.111.198.113 'echo "SSH connection successful"'
 
-            # Step 5: Deploy to EC2
-            - name: Deploy to EC2
-              run: |
-                  ssh -o StrictHostKeyChecking=no ubuntu@3.111.198.113 << 'EOF'
-                    set -e  # Exit immediately if a command exits with a non-zero status
-                    echo "Navigating to application directory"
-                    cd /var/www/laravel-aws
+      # Step 5: Deploy to EC2
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@3.111.198.113 << 'EOF'
+            set -e  # Exit immediately if a command exits with a non-zero status
+            echo "Navigating to application directory"
+            cd /var/www/laravel-aws
 
-                    echo "Pulling latest changes from your GitHub repository"
-                    git pull git@github.com:Mayank0851/laravel-aws.git | tee git_pull.log
-                    echo "Git pull completed"
+            echo "Pulling latest changes from your GitHub repository"
+            git pull https://github.com/Mayank0851/laravel-aws.git | tee git_pull.log
+            echo "Git pull completed"
 
-                    echo "Installing PHP dependencies"
-                    composer install --no-interaction --prefer-dist --optimize-autoloader | tee composer_install.log
+            echo "Installing PHP dependencies"
+            composer install --no-interaction --prefer-dist --optimize-autoloader | tee composer_install.log
 
-                    echo "Installing Node.js (if not already installed)"
-                    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-                    sudo apt-get install -y nodejs
+            echo "Installing Node.js (if not already installed)"
+            if ! command -v node &> /dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
 
-                    echo "Installing Node.js packages"
-                    npm install | tee npm_install.log
-                    echo "Building assets"
-                    npm run build | tee npm_build.log
+            echo "Installing Node.js packages"
+            npm install | tee npm_install.log
+            echo "Building assets"
+            npm run build | tee npm_build.log
 
-                    echo "Running database migrations"
-                    php artisan migrate --force | tee migrate.log
+            echo "Running database migrations"
+            php artisan migrate --force | tee migrate.log
 
-                    echo "Optimizing application"
-                    php artisan optimize | tee optimize.log
+            echo "Optimizing application"
+            php artisan optimize | tee optimize.log
 
-                    echo "Reloading Nginx"
-                    sudo systemctl daemon-reload
-                    sudo service nginx restart
-                    echo "Deployment complete!"
-                    
-                    # Optional: Test if the application is running
-                    echo "Testing application status"
-                    curl -f http://localhost || echo "Application is not responding"
+            echo "Reloading Nginx"
+            sudo systemctl daemon-reload
+            sudo service nginx restart
+            echo "Deployment complete!"
+            
+            # Optional: Test if the application is running
+            echo "Testing application status"
+            curl -f http://localhost || echo "Application is not responding"
 
-                  EOF
+          EOF
+
 
         
